@@ -1,8 +1,10 @@
+USE task_manager;
+
 create table user (
     user_id int auto_increment primary key,
     first_name varchar(50) not null,
     last_name varchar(50) not null,
-    email varchar(200) not null,
+    email varchar(200) not null
 );
 
 create table task (
@@ -15,31 +17,31 @@ create table task (
 
     status enum('COMPLETED', 'IN_PROGRESS', 'NOT_STARTED') not null default 'NOT_STARTED',
    
-    foreign key (user_id) references User (user_id)
+    foreign key (user_id) references user (user_id)
 );
 
 create table fixed_block (
     block_id int auto_increment primary key,
     user_id int not null,
     title varchar(150) not null,
-    start_time datetime not null,
-    end_time datetime not null,
+    start_datetime datetime not null,
+    end_datetime datetime not null,
     
     recurrence_type enum (
         'ONCE',
         'DAILY',
         'WEEKLY',
         'MONTHLY'
-    ) not null default 'once',
+    ) not null default 'ONCE',
 
     recurrence_rule varchar(255) null,
 
-    foreign key (user_id) references User (user_id)   
+    foreign key (user_id) references user (user_id)   
 );
 
 create table schedule_entry (
-    schedule_entries_id int auto_increment primary key,
-    user_id int not null.
+    schedule_entry_id int auto_increment primary key,
+    user_id int not null,
     task_id int null,
     block_id int null,
 
@@ -48,11 +50,11 @@ create table schedule_entry (
     created_by date,
     is_locked boolean not null default false,
 
-    foreign key (user_id) references User (user_id),
-    foreign key (task_id) references Task (task_id),
-    foreign key (block_id) references Fixed_block (block_id)
+    foreign key (user_id) references user (user_id),
+    foreign key (task_id) references task (task_id),
+    foreign key (block_id) references fixed_block (block_id)
 
-)
+);
 
 create table time_entry (
     time_entry_id int auto_increment primary key,
@@ -61,8 +63,8 @@ create table time_entry (
     end_datetime datetime not null,
     duration_minutes int not null,
 
-    foreign key (task_id) references Task (task_id),
-)
+    foreign key (task_id) references task (task_id)
+);
 
 
 
