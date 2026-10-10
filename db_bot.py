@@ -119,7 +119,6 @@ def main():
     conn.close()
     print("Program closed.")
 
-
 if __name__ == "__main__":
     main()   
 
