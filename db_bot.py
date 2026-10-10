@@ -57,8 +57,28 @@ def build_sql_prompt(question, schema):
 
     Return only the SQL statement. 
     """
+def security(sql): 
+    sql = sql.strip().lower()
 
+    forbidden_words = [
+        "insert", "update", "delete", "drop", "alter", "truncate"
+    ]
+    return (
+        sql.startswith("select")
+        and not any(word in sql for word in forbidden_words)
+    )
 
+def build_answer_prompt(question, rows):
+
+    return f"""
+    Answer the user's question clearly and briefly
+
+    User question: 
+    {question}
+
+    MySQL results: 
+    {rows}
+    """
 def getOpenAIResponse(client, model,prompt):
     response = client.responses.create(
         model = model,
@@ -68,24 +88,36 @@ def getOpenAIResponse(client, model,prompt):
 
 
 def execute_sql(conn, sql_query):
+    if not security(sql_query):
+        raise ValueError("Unsafe SQL rejected.")
+    
     cursor = conn.cursor()
     cursor.execute(sql_query)
     rows = cursor.fetchall()
-    cursor.close()   
+    cursor.close()  
+
     return rows
 
 def main():
     conn = create_connection()
     client,model = createOpenAI_client()
-
     schema = get_schema_text()
-    question = input("Ask a question: ")
-    prompt = build_sql_prompt(question, schema)
-    sql = getOpenAIResponse(client, model,prompt)
 
-    rows = execute_sql(conn, sql)
-    print(rows)
+    while True: 
+        question = input("Ask a question, or type quit: ")
+        if question.lower() == "quit":
+            break
+        prompt = build_sql_prompt(question, schema)
+        sql = getOpenAIResponse(client, model,prompt)
+    
+        rows = execute_sql(conn, sql)
+        answer = build_answer_prompt(question, rows)
+        friendly_response = getOpenAIResponse(client, model,answer)
+
+        print("Friendly Response:", friendly_response)
+    
     conn.close()
+    print("Program closed.")
 
 
 if __name__ == "__main__":
