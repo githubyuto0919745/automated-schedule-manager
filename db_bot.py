@@ -31,7 +31,7 @@ def get_schema_text():
     user:
         user_id, first_name, last_name, email
 
-    task: task_id, user_id, title, priority, deadline, estimated_duration, status
+    task: task_id, user_id, title, priority (1=low, 2=medium, 3=high), deadline, estimated_duration, status(NOT_STARTED, IN_PROGRESS, COMPLETED)
 
     fixed_block: 
     block_id, user_id, title, start_datetime, end_datetime, recurrence_type, recurrence_rule   
@@ -55,7 +55,12 @@ def build_sql_prompt(question, schema):
     User Question: 
     {question}
 
-    Return only the SQL statement. 
+    Return only the SQL statement.
+
+    Use only the tables and columns in the schema.
+    If the question needs information the schema does not contain, return exactly:
+    CANNOT_ANSWER
+    Otherwise, return one MySQL SELECT statement only. 
     """
 def security(sql): 
     sql = sql.strip().lower()
@@ -86,6 +91,18 @@ def getOpenAIResponse(client, model,prompt):
     )
     return response.output_text
 
+def sanitize_sql_response(sql):
+    sql = sql.strip()
+
+    if sql.startswith("```"):
+        lines = sql.splitlines()
+        lines = lines[1:]
+
+        if lines and lines[-1].strip() == "```":
+            lines = lines[:-1]
+        sql = "\n".join(lines).strip()
+
+    return sql        
 
 def execute_sql(conn, sql_query):
     if not security(sql_query):
@@ -109,7 +126,13 @@ def main():
             break
         prompt = build_sql_prompt(question, schema)
         sql = getOpenAIResponse(client, model,prompt)
-    
+        sql = sanitize_sql_response(sql)
+
+        if sql.strip().upper() == "CANNOT_ANSWER":
+            print("I can't answer that using the current database.")
+            continue
+
+
         rows = execute_sql(conn, sql)
         answer = build_answer_prompt(question, rows)
         friendly_response = getOpenAIResponse(client, model,answer)
