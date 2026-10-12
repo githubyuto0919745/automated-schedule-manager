@@ -1,0 +1,3 @@
+1. This database supports an automated schedule manager. It stores users’ tasks, deadlines, priorities, fixed commitments, and time entries so the app can generate an optimized schedule.
+
+2. I tried asking direct questions about the database, such as “Which tasks have not started?” I also tried more specific questions about task deadlines. Finally, I tested unrelated questions that the database could not answer. The relevant questions generated SQL and returned database results, while unrelated questions returned CANNOT_ANSWER. I added this response so the system clearly says when it cannot answer, instead of treating the question as if it returned zero results.

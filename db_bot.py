@@ -128,15 +128,20 @@ def main():
         sql = getOpenAIResponse(client, model,prompt)
         sql = sanitize_sql_response(sql)
 
+
+        print("Generated SQL: ", sql)
+
+
         if sql.strip().upper() == "CANNOT_ANSWER":
             print("I can't answer that using the current database.")
             continue
 
 
         rows = execute_sql(conn, sql)
+        print("Database results: ", rows)
+
         answer = build_answer_prompt(question, rows)
         friendly_response = getOpenAIResponse(client, model,answer)
-
         print("Friendly Response:", friendly_response)
     
     conn.close()
