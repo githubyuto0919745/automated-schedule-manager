@@ -45,12 +45,24 @@ def get_schema_text():
     """
 
 
-def build_sql_prompt(question, schema):
+def build_sql_prompt(question, schema, user_example = False):
+    
+    examples = ""
+
+    if user_example:
+        examples = """
+        Question: What tasks are in progress?
+        SQL: SELECT * FROM task WHERE status = 'IN_PROGRESS';
+        """
+
+    
     return f"""
     Can you convert this question into MySQL query statements? 
 
     Database schema: 
     {schema}
+
+    {examples}
 
     User Question: 
     {question}
@@ -124,7 +136,7 @@ def main():
         question = input("Ask a question, or type quit: ")
         if question.lower() == "quit":
             break
-        prompt = build_sql_prompt(question, schema)
+        prompt = build_sql_prompt(question, schema,user_example = True)
         sql = getOpenAIResponse(client, model,prompt)
         sql = sanitize_sql_response(sql)
 
